@@ -1,0 +1,27 @@
+---
+# tasks file for ansible-rclone
+#
+- name: Install rclone
+  yum:
+    name: https://downloads.rclone.org/rclone-current-linux-amd64.rpm
+    state: present
+
+- name: Ensure config directory for the user this playbook runs as exists
+  file:
+    path: "~/.config/rclone"
+    state: "directory"
+    mode: "0775"
+
+- name: Add config for the user this playbook runs as
+  template:
+    src: rclone.conf.j2
+    dest: "~/.config/rclone/rclone.conf"
+    mode: "0600"
+
+- name: Add cronjob to regularly sync down important documents.
+  cron:
+    name: "Google Drive local backup"
+    minute: "0"
+    hour: "21"
+    weekday: "2,6"
+    job: "/usr/bin/rclone sync {{ remote }}:{{ remote_path }} {{ local_path }}"
